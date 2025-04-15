@@ -35,12 +35,12 @@ jobs:
           
       - name: Verify HTML Output
         run: |
-            ls -l
-            if [ ! -f strava_dashboard.html ]; then
-              echo "ERROR: strava_dashboard.html not found after script execution."
-              exit 1
-            fi
-            echo "strava_dashboard.html successfully generated."
+          ls -l
+          if [ ! -f strava_dashboard.html ]; then
+            echo "ERROR: strava_dashboard.html not found after script execution."
+            exit 1
+          fi
+          echo "strava_dashboard.html successfully generated."
 
       - name: Checkout GitHub Pages Repo
         uses: actions/checkout@v4
@@ -55,25 +55,25 @@ jobs:
           path: pages-repo # Checkout the pages repo into a subdirectory
 
       - name: Deploy HTML to gh-pages
-          run: |
-            echo "Copying strava_dashboard.html to pages-repo..."
-            cp strava_dashboard.html pages-repo/strava_dashboard.html # Copy strava_dashboard.html
-            cd pages-repo
+        run: |
+          echo "Copying strava_dashboard.html to pages-repo..."
+          cp strava_dashboard.html pages-repo/strava_dashboard.html # Copy strava_dashboard.html
+          cd pages-repo
 
-            echo "Configuring Git..."
-            git config --global user.name 'github-actions[bot]'
-            git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          echo "Configuring Git..."
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
-            echo "Checking for changes..."
-            git add strava_dashboard.html
+          echo "Checking for changes..."
+          git add strava_dashboard.html
 
-            if git diff --staged --quiet; then
-              echo "No changes detected in strava_dashboard.html. Nothing to commit."
-            else
-              echo "Changes detected. Committing and pushing to gh-pages..."
-              git commit -m "Update Strava dashboard data ($(date -u +'%Y-%m-%d %H:%M:%S %Z'))"
-              git push origin gh-pages
-              echo "Push to gh-pages successful."
-            fi
-          shell: bash
+          if git diff --staged --quiet; then
+            echo "No changes detected in strava_dashboard.html. Nothing to commit."
+          else
+            echo "Changes detected. Committing and pushing to gh-pages..."
+            git commit -m "Update Strava dashboard data ($(date -u +'%Y-%m-%d %H:%M:%S %Z'))"
+            git push origin gh-pages
+            echo "Push to gh-pages successful."
+          fi
+        shell: bash
 
