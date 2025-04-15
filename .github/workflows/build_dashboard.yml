@@ -1,0 +1,79 @@
+name: Generate and Deploy Strava Dashboard
+
+on:
+  schedule:
+    # Runs automatically 
+    - cron: '0 0 1 * *'
+  workflow_dispatch: # Allows manual triggering from the Actions tab
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Read permission for checking out the current repo
+
+    steps:
+      - name: Checkout Code Repo
+        uses: actions/checkout@v4 # Checks out the repo containing this workflow and the python script
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10' # Or your preferred Python version
+
+      - name: Install Python Dependencies
+        run: pip install requests
+
+      - name: Generate Strava Dashboard HTML
+        env:
+          # IMPORTANT: Set these as encrypted secrets in your GitHub repository settings
+          # Go to Repo Settings -> Secrets and variables -> Actions -> New repository secret
+          STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
+          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
+        run: python generate_dashboard.py # Assumes your script is named this
+          
+      - name: Verify HTML Output
+        run: |
+            ls -l
+            if [ ! -f strava_dashboard.html ]; then
+              echo "ERROR: strava_dashboard.html not found after script execution."
+              exit 1
+            fi
+            echo "strava_dashboard.html successfully generated."
+
+      - name: Checkout GitHub Pages Repo
+        uses: actions/checkout@v4
+        with:
+          # IMPORTANT: Replace with your actual GitHub Pages repository
+          # e.g., your-username/your-username.github.io OR your-username/other-repo-for-pages
+          repository: ${{ secrets.PAGES_REPO_OWNER }}/${{ secrets.PAGES_REPO_NAME }}
+          # IMPORTANT: Create a Personal Access Token (PAT) or use a Deploy Key
+          # PAT needs 'repo' scope (classic) or 'contents: write' (fine-grained)
+          # Store the PAT as a secret named GH_PAT in the repo running this action
+          token: ${{ secrets.GH_PAT }}
+          path: pages-repo # Checkout the pages repo into a subdirectory
+
+      - name: Deploy HTML to gh-pages
+          run: |
+            echo "Copying strava_dashboard.html to pages-repo..."
+            cp strava_dashboard.html pages-repo/strava_dashboard.html # Copy strava_dashboard.html
+            cd pages-repo
+
+            echo "Configuring Git..."
+            git config --global user.name 'github-actions[bot]'
+            git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+            echo "Checking for changes..."
+            git add strava_dashboard.html
+
+            if git diff --staged --quiet; then
+              echo "No changes detected in strava_dashboard.html. Nothing to commit."
+            else
+              echo "Changes detected. Committing and pushing to gh-pages..."
+              git commit -m "Update Strava dashboard data ($(date -u +'%Y-%m-%d %H:%M:%S %Z'))"
+              git push origin gh-pages
+              echo "Push to gh-pages successful."
+            fi
+          shell: bash
+
