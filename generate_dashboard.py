@@ -21,6 +21,10 @@ ACTIVITIES_URL = "https://www.strava.com/api/v3/athlete/activities"
 
 def refresh_access_token():
     """Refreshes the Strava access token using the refresh token."""
+    if STRAVA_REFRESH_TOKEN is None:
+        print("Error: STRAVA_REFRESH_TOKEN is not set.")
+        return None
+    # Prepare the payload for the token refresh request
     payload = {
         'client_id': STRAVA_CLIENT_ID,
         'client_secret': STRAVA_CLIENT_SECRET,
